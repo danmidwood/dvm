@@ -4,52 +4,46 @@ Author: Dan Midwood
 Copyright: See LICENSE file in this distribution.
 
 define method candidates-location()
-  let hd = as(<string>, home-directory());
-  concatenate(hd, ".dvm/candidates/");
+  subdirectory-locator(home-directory(), ".dvm/candidates");
 end;
 
 define method bin-location()
-  let hd = as(<string>, home-directory());
-  concatenate(hd, ".dvm/bin/");
+  subdirectory-locator(home-directory(), ".dvm/bin");
 end;
 
 define method list-versions(candidate :: <string>)
-  let candidates-dir = candidates-location();
-  // It's rare to call the -setter function directly.  This would
-  // normally be working-directory() := candidates-dir;  --cgay
-  working-directory-setter(candidates-dir);
-  run-application(concatenate("ls ", candidate, "/bin"));
+  let candidates-dir = subdirectory-locator(candidates-location(), candidate);
+  let candidate-version-dir = subdirectory-locator(candidates-dir, "bin");
+  run-application(concatenate("ls ", as(<string>, candidate-version-dir)));
 end;
 
 define method list-candidates()
-  let candidates-dir = candidates-location();
-  working-directory-setter(candidates-dir);
-  run-application("ls ");
+  run-application(concatenate("ls ", as(<string>, candidates-location())));
 end;
 
 define method install-candidate(candidate :: <string>, version :: <string>)
-  // This should really use locator-subdirectory rather than concatenate to create
-  // a subdirectory so it doesn't depend on as(<string>, ...) returning a string
-  // with a trailing slash.  --cgay
-  let from-location = concatenate(as(<string>, working-directory()), "_build");
-  let candidate-bin-location = concatenate(as(<string>, candidates-location()), candidate, "/bin/");
+  let from-location = subdirectory-locator(working-directory(), "_build");
+  let candidate-bin-location = subdirectory-locator(
+                                                    subdirectory-locator(candidates-location(), candidate),
+                                                    "bin");
   ensure-directories-exist(candidate-bin-location);
-  let to-location = concatenate(candidate-bin-location, version);
-  // format-to-string would probably be more readable than concatenate here?  --cgay
-  run-application(concatenate("cp -r \"", from-location, "\" \"", to-location, "\""));
+  let to-location = subdirectory-locator(candidate-bin-location, version);
+  run-application(format-to-string("cp -r %s %s", from-location, to-location));
 end;
 
 define generic run-command(cmd :: <symbol>, args :: <list>) => ();
 
 define method run-command(cmd == #"use", args :: <list>) => ()
-  // When a command has a lot of args this will get tedious.  You could do this
-  // instead:  let (candidate, version) = apply(values, args);  --cgay
-  let candidate = first(args);
-  let version = second(args);
+  let (candidate, version) = apply(values, args);
   let candidates-dir = candidates-location();
-  let candidate-bin = concatenate(candidates-dir, candidate, "/bin/", version, "/bin/");
+  let candidate-bin = subdirectory-locator(candidates-dir, candidate);
+  candidate-bin := subdirectory-locator(candidate-bin, "bin");
+  candidate-bin := subdirectory-locator(candidate-bin, version);
+  candidate-bin := subdirectory-locator(candidate-bin, "bin");
   let bin-dir = bin-location();
-  run-application(concatenate("ln -fs ", concatenate(candidate-bin, "*"), " ", bin-dir));
+  run-application(format-to-string("ln -fs %s %s",
+                                   concatenate(as(<string>, candidate-bin), "*"),
+                                   bin-dir));
 end;
 
 define method run-command(cmd == #"install", args :: <list>) => ()
