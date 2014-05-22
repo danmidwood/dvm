@@ -3,12 +3,17 @@ Synopsis: Dylan Environment Configurator
 Author: Dan Midwood
 Copyright: See LICENSE file in this distribution.
 
+define method base-location()
+  subdirectory-locator(home-directory(), ".dvm");
+end;
+
+
 define method candidates-location()
-  subdirectory-locator(home-directory(), ".dvm/candidates");
+  subdirectory-locator(base-location(), "candidates");
 end;
 
 define method bin-location()
-  subdirectory-locator(home-directory(), ".dvm/bin");
+  subdirectory-locator(base-location(), "bin");
 end;
 
 define method list-versions(candidate :: <string>)
@@ -66,7 +71,9 @@ define method run-command(cmd :: <symbol>, args :: <list>) => ()
 end;
 
 define method main (name :: <string>, args :: <list>)
+  ensure-directories-exist(base-location());
   ensure-directories-exist(candidates-location());
+  ensure-directories-exist(bin-location());
   run-command(as(<symbol>, head(args)), tail(args));
   exit-application(0);
 end;
