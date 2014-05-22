@@ -1,0 +1,11 @@
+{
+  "name": "dvm",
+  "description": "A RVM for Dylan",
+  "git": "git@github.com:danmidwood/dvm.git",
+  "keywords": [
+  ],
+  "license": "MIT",
+  "default-target": "dvm",
+  "tests": [
+  ]
+}
