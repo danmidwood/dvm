@@ -15,6 +15,8 @@ end;
 
 define method list-versions(candidate :: <string>)
   let candidates-dir = candidates-location();
+  // It's rare to call the -setter function directly.  This would
+  // normally be working-directory() := candidates-dir;  --cgay
   working-directory-setter(candidates-dir);
   run-application(concatenate("ls ", candidate, "/bin"));
 end;
@@ -26,16 +28,22 @@ define method list-candidates()
 end;
 
 define method install-candidate(candidate :: <string>, version :: <string>)
+  // This should really use locator-subdirectory rather than concatenate to create
+  // a subdirectory so it doesn't depend on as(<string>, ...) returning a string
+  // with a trailing slash.  --cgay
   let from-location = concatenate(as(<string>, working-directory()), "_build");
   let candidate-bin-location = concatenate(as(<string>, candidates-location()), candidate, "/bin/");
   ensure-directories-exist(candidate-bin-location);
   let to-location = concatenate(candidate-bin-location, version);
+  // format-to-string would probably be more readable than concatenate here?  --cgay
   run-application(concatenate("cp -r \"", from-location, "\" \"", to-location, "\""));
 end;
 
 define generic run-command(cmd :: <symbol>, args :: <list>) => ();
 
 define method run-command(cmd == #"use", args :: <list>) => ()
+  // When a command has a lot of args this will get tedious.  You could do this
+  // instead:  let (candidate, version) = apply(values, args);  --cgay
   let candidate = first(args);
   let version = second(args);
   let candidates-dir = candidates-location();
@@ -58,6 +66,7 @@ define method run-command(cmd == #"list", args :: <list>) => ()
 end;
 
 define method run-command(cmd :: <symbol>, args :: <list>) => ()
+  // format-out("unknown cmd: %s", cmd)  --cgay
   format-out("unknown cmd: ");
   format-out(as(<string>, cmd));
 end;
