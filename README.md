@@ -27,6 +27,11 @@ There's no error handling so error messages aren't very helpful.
 
 This calls out to various unix commands (ls, ln, cp) so make sure they're available on your path.
 
+## Development
+
+* Clone: `git clone git@github.com:danmidwood/dvm.git`
+* Build: `dylan-compiler dvm -build`
+
 ## License
 
 MIT Licensed, © Dan Midwood, 2014
